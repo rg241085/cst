@@ -204,16 +204,7 @@ function validateCoupon() {
         const now = new Date();
         const timeStr = now.toLocaleDateString('en-IN') + ", " + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 
-        firebase.database().ref('coupons/' + code).update({ used: true, usedAt: timeStr });
-        addToLocalReport(bill, c.amount, code);
-
-        let graceMsg = "";
-        if (todayISO > c.validThru) {
-            graceMsg = `<div style="font-size:10px; color:#d97706; margin-top:5px;">⚠️ Grace Period Applied (+${GRACE_DAYS} Days)</div>`;
-        }
-
-        // ... (upar ka code same rahega)
-
+        // Database Update aur Report Save (Sirf ek baar)
         firebase.database().ref('coupons/' + code).update({ used: true, usedAt: timeStr });
         addToLocalReport(bill, c.amount, code);
 
@@ -223,15 +214,11 @@ function validateCoupon() {
         }
 
         // --- NAYA QR CODE LOGIC ---
-        const finalAmount = bill - c.amount; // Final amount calculate kiya
-
-        // ⚠️ ZAROORI: Yahan apni asli business UPI ID dalein!
+        const finalAmount = bill - c.amount;
         const upiId = "7014702933@ybl";
         const payeeName = "DryFu";
 
-        // UPI Link banaya
         const upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${finalAmount}&cu=INR`;
-        // API se QR code image URL banaya
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLink)}`;
         // --------------------------
 
