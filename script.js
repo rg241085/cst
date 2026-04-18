@@ -212,15 +212,44 @@ function validateCoupon() {
             graceMsg = `<div style="font-size:10px; color:#d97706; margin-top:5px;">⚠️ Grace Period Applied (+${GRACE_DAYS} Days)</div>`;
         }
 
+        // ... (upar ka code same rahega)
+
+        firebase.database().ref('coupons/' + code).update({ used: true, usedAt: timeStr });
+        addToLocalReport(bill, c.amount, code);
+
+        let graceMsg = "";
+        if (todayISO > c.validThru) {
+            graceMsg = `<div style="font-size:10px; color:#d97706; margin-top:5px;">⚠️ Grace Period Applied (+${GRACE_DAYS} Days)</div>`;
+        }
+
+        // --- NAYA QR CODE LOGIC ---
+        const finalAmount = bill - c.amount; // Final amount calculate kiya
+
+        // ⚠️ ZAROORI: Yahan apni asli business UPI ID dalein!
+        const upiId = "7014702933@ybl";
+        const payeeName = "DryFu";
+
+        // UPI Link banaya
+        const upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${finalAmount}&cu=INR`;
+        // API se QR code image URL banaya
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLink)}`;
+        // --------------------------
+
         resBox.className = "result-box";
         resBox.innerHTML = `
             <div class="res-header"><span class="res-icon">🎉</span><h3 class="res-title">CONGRATULATIONS!</h3></div>
             <div class="res-body">
                 <div class="res-row"><span>Invoice</span><span>₹${bill}</span></div>
                 <div class="res-row" style="color:#22c55e;"><span>Discount</span><span>- ₹${c.amount}</span></div>
-                <div class="res-final"><span class="pay-label">COLLECT</span><span class="pay-amount">₹${bill - c.amount}</span></div>
+                <div class="res-final"><span class="pay-label">COLLECT</span><span class="pay-amount">₹${finalAmount}</span></div>
                 ${graceMsg}
+                
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 2px dashed #e2e8f0;">
+                    <p style="font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">📱 Scan to Pay via UPI</p>
+                    <img src="${qrUrl}" alt="UPI QR Code" style="width: 140px; height: 140px; border-radius: 12px; border: 3px solid #134E5E; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                </div>
             </div>`;
+
         renderLocalReport();
         billInput.value = ""; codeInput.value = "";
     });
